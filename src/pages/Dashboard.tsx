@@ -39,7 +39,7 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold">
             Bem-vindo ao 
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
-              {" "}EngiTools Pro
+              {" "}EPROJECTS
             </span>
           </h1>
           <p className="mt-2 text-white/70">

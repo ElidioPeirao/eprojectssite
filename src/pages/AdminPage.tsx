@@ -32,7 +32,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash, Edit, User as UserIcon, Calculator, Wrench as WrenchIcon, Settings as SettingsIcon } from "lucide-react";
 
 const AdminPage = () => {
-  const { user } = useAuth();
+  const { user, updateUsers, getAllUsers } = useAuth();
   const { tools, addTool, updateTool, deleteTool } = useTools();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,18 +67,10 @@ const AdminPage = () => {
       navigate("/");
     }
     
-    // Carrega usuários do localStorage
-    const storedUsers = localStorage.getItem("users");
-    if (storedUsers) {
-      setUsers(JSON.parse(storedUsers));
-    }
-  }, [user, navigate]);
-
-  // Atualização de usuários no localStorage
-  const updateUsers = (updatedUsers: User[]) => {
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-  };
+    // Carrega usuários do contexto
+    const loadedUsers = getAllUsers();
+    setUsers(loadedUsers);
+  }, [user, navigate, getAllUsers]);
 
   const handleAddUser = () => {
     if (!newUsername || !newEmail || !newPassword) {
@@ -121,6 +113,7 @@ const AdminPage = () => {
     };
 
     const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
     updateUsers(updatedUsers);
 
     // Limpar formulário
@@ -167,6 +160,7 @@ const AdminPage = () => {
       u.id === editingUser.id ? updatedUser : u
     );
 
+    setUsers(updatedUsers);
     updateUsers(updatedUsers);
     setIsEditUserDialogOpen(false);
 
@@ -188,6 +182,7 @@ const AdminPage = () => {
     }
 
     const updatedUsers = users.filter(u => u.id !== userId);
+    setUsers(updatedUsers);
     updateUsers(updatedUsers);
 
     toast({
@@ -475,7 +470,7 @@ const AdminPage = () => {
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsEditUserDialogOpen(false)}>
                         Cancelar
-                      </Button>
+                      Button>
                       <Button className="bg-orange-500 hover:bg-orange-600" onClick={handleEditUser}>
                         Salvar Alterações
                       </Button>

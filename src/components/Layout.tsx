@@ -32,7 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
               className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600 cursor-pointer"
               onClick={() => navigate("/")}
             >
-              EngiTools Pro
+              EPROJECTS
             </h1>
             {title && (
               <>
@@ -92,7 +92,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       </main>
 
       <footer className="border-t border-orange-900/30 px-6 py-4 text-center text-sm text-white/50">
-        <p>EngiTools Pro &copy; {new Date().getFullYear()} - Todos os direitos reservados</p>
+        <p>EPROJECTS &copy; {new Date().getFullYear()} - By Elidio Peirão Junior. Todos os direitos reservados</p>
       </footer>
     </div>
   );

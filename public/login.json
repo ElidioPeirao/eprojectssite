@@ -1,0 +1,33 @@
+
+{
+  "users": [
+    {
+      "id": "admin-1",
+      "username": "Elidio",
+      "email": "admin@engitools.com",
+      "password": "76255",
+      "role": "admin",
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "allowedTools": ["all"]
+    },
+    {
+      "id": "user-1",
+      "username": "usuario_padrao",
+      "email": "usuario@exemplo.com",
+      "password": "123456",
+      "role": "user",
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "allowedTools": ["calc-eng", "calc-ele"]
+    },
+    {
+      "id": "user-2",
+      "username": "usuario_pro",
+      "email": "pro@exemplo.com",
+      "password": "123456",
+      "role": "pro",
+      "proExpiresAt": "2023-06-01T12:00:00.000Z",
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "allowedTools": ["calc-eng", "calc-ele", "pro-tool-1", "pro-tool-2"]
+    }
+  ]
+}

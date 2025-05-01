@@ -3,63 +3,74 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { User, AuthContextType } from "../types";
 import { useToast } from "@/components/ui/use-toast";
 
-// Usuário admin pré-definido
-const adminUser: User = {
-  id: "admin-1",
-  username: "Elidio",
-  email: "admin@engitools.com",
-  password: "76255", // Em um ambiente real, isso seria armazenado de forma segura
-  role: "admin",
-  createdAt: new Date(),
-  allowedTools: ["all"]
-};
-
-// Alguns usuários padrão para testes
-const initialUsers: User[] = [
-  adminUser,
-  {
-    id: "user-1",
-    username: "usuario_padrao",
-    email: "usuario@exemplo.com",
-    password: "123456",
-    role: "user",
-    createdAt: new Date(),
-    allowedTools: ["calc-eng", "calc-ele"]
-  },
-  {
-    id: "user-2",
-    username: "usuario_pro",
-    email: "pro@exemplo.com",
-    password: "123456",
-    role: "pro",
-    proExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
-    createdAt: new Date(),
-    allowedTools: ["calc-eng", "calc-ele", "pro-tool-1", "pro-tool-2"]
-  }
-];
-
 // Contexto de autenticação
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [users, setUsers] = useState<User[]>([]);
   const { toast } = useToast();
+
+  // Carregar usuários do arquivo login.json
+  const loadUsers = async () => {
+    try {
+      const response = await fetch("/login.json");
+      if (!response.ok) {
+        throw new Error("Falha ao carregar arquivo de usuários");
+      }
+      const data = await response.json();
+      // Converter datas de string para objeto Date
+      const processedUsers = data.users.map((u: any) => ({
+        ...u,
+        createdAt: new Date(u.createdAt),
+        proExpiresAt: u.proExpiresAt ? new Date(u.proExpiresAt) : undefined
+      }));
+      setUsers(processedUsers);
+      return processedUsers;
+    } catch (error) {
+      console.error("Erro ao carregar usuários:", error);
+      return [];
+    }
+  };
+
+  // Salvar usuários no localStorage como backup
+  const saveUsersToLocalStorage = (usersData: User[]) => {
+    localStorage.setItem("users", JSON.stringify(usersData));
+  };
 
   // Carregar usuário do localStorage ao iniciar
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedUsers = localStorage.getItem("users");
+    const init = async () => {
+      setIsLoading(true);
+      const storedUser = localStorage.getItem("user");
+      
+      // Carregar usuários do arquivo
+      const loadedUsers = await loadUsers();
+      
+      // Se não houver usuários carregados, usar backup do localStorage
+      if (loadedUsers.length === 0) {
+        const backupUsers = localStorage.getItem("users");
+        if (backupUsers) {
+          setUsers(JSON.parse(backupUsers));
+        }
+      } else {
+        // Salvar no localStorage como backup
+        saveUsersToLocalStorage(loadedUsers);
+      }
 
-    if (!storedUsers) {
-      localStorage.setItem("users", JSON.stringify(initialUsers));
-    }
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+      setIsLoading(false);
+    };
 
-    // Verificamos se a sessão pro expirou
+    init();
+  }, []);
+
+  // Verificar expiração de acesso Pro
+  useEffect(() => {
     if (user && user.role === "pro" && user.proExpiresAt) {
       const expiryDate = new Date(user.proExpiresAt);
       if (expiryDate < new Date()) {
@@ -73,11 +84,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("user", JSON.stringify(updatedUser));
         
         // Atualiza na lista de usuários
-        const users = JSON.parse(localStorage.getItem("users") || "[]");
         const updatedUsers = users.map((u: User) => 
           u.id === user.id ? updatedUser : u
         );
-        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        setUsers(updatedUsers);
+        saveUsersToLocalStorage(updatedUsers);
         
         toast({
           title: "Acesso Pro expirado",
@@ -86,19 +97,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     }
-
-    setIsLoading(false);
-  }, []);
+  }, [user, users, toast]);
 
   // Função de login
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Busca usuários do localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      // Recarregar usuários para garantir dados atualizados
+      const currentUsers = await loadUsers();
+      const usersToCheck = currentUsers.length > 0 ? currentUsers : users;
       
       // Encontra o usuário
-      const foundUser = users.find((u: User) => u.email === email && u.password === password);
+      const foundUser = usersToCheck.find((u: User) => u.email === email && u.password === password);
       
       if (!foundUser) {
         throw new Error("Credenciais inválidas");
@@ -112,10 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           foundUser.allowedTools = foundUser.allowedTools.filter(tool => !tool.startsWith("pro-"));
           
           // Atualiza na lista de usuários
-          const updatedUsers = users.map((u: User) => 
+          const updatedUsers = usersToCheck.map((u: User) => 
             u.id === foundUser.id ? foundUser : u
           );
-          localStorage.setItem("users", JSON.stringify(updatedUsers));
+          setUsers(updatedUsers);
+          saveUsersToLocalStorage(updatedUsers);
           
           toast({
             title: "Acesso Pro expirado",
@@ -149,8 +160,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (username: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Busca usuários do localStorage
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      // Recarregar usuários para garantir dados atualizados
+      await loadUsers();
       
       // Verifica se o email já está em uso
       const existingUser = users.find((u: User) => u.email === email);
@@ -171,8 +182,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       // Adiciona à lista de usuários
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
+      const updatedUsers = [...users, newUser];
+      setUsers(updatedUsers);
+      saveUsersToLocalStorage(updatedUsers);
       
       // Faz login com o novo usuário
       localStorage.setItem("user", JSON.stringify(newUser));
@@ -194,6 +206,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Função para atualizar usuários
+  const updateUsers = (updatedUsers: User[]) => {
+    setUsers(updatedUsers);
+    saveUsersToLocalStorage(updatedUsers);
+  };
+
+  // Função para obter todos os usuários
+  const getAllUsers = () => {
+    return users;
+  };
+
   // Função de logout
   const logout = () => {
     localStorage.removeItem("user");
@@ -205,7 +228,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      register, 
+      logout, 
+      updateUsers, 
+      getAllUsers 
+    }}>
       {children}
     </AuthContext.Provider>
   );
