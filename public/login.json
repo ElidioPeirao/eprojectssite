@@ -29,5 +29,15 @@
       "createdAt": "2023-05-01T12:00:00.000Z",
       "allowedTools": ["calc-eng", "calc-ele", "pro-tool-1", "pro-tool-2"]
     }
+    {
+      "id": "user-3",
+      "username": "Luis Sapelli",
+      "email": "pro@exemplo.com",
+      "password": "123456",
+      "role": "pro",
+      "proExpiresAt": "2023-06-01T12:00:00.000Z",
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "allowedTools": ["calc-eng", "calc-ele", "pro-tool-1", "pro-tool-2"]
+    }
   ]
 }
