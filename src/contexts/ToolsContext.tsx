@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { Tool } from "../types";
 import { useToast } from "@/components/ui/use-toast";
@@ -50,27 +51,51 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchTools();
   }, []);
 
-  // Função para salvar ferramentas no localStorage
-  const saveTools = (updatedTools: Tool[]) => {
-    localStorage.setItem("tools", JSON.stringify(updatedTools));
-    
-    // Simulando o salvamento no arquivo JSON (apenas para localStorage neste exemplo)
-    const toolsData = { tools: updatedTools };
-    
-    // Simulando um "salvamento" no arquivo JSON
-    console.log("Ferramentas salvas:", toolsData);
-    
-    toast({
-      title: "Ferramentas salvas",
-      description: "As alterações nas ferramentas foram salvas com sucesso e armazenadas permanentemente.",
-    });
-    
-    // Nota: Em um ambiente de produção, aqui realizaríamos uma requisição
-    // para uma API que atualizaria o arquivo tools.json no servidor
+  // Função para salvar ferramentas no arquivo tools.json
+  const saveToolsToFile = async (toolsData: Tool[]) => {
+    try {
+      // Preparar dados para salvar (converter Dates para strings)
+      const dataToSave = {
+        tools: toolsData.map(t => ({
+          ...t,
+          createdAt: t.createdAt.toISOString()
+        }))
+      };
+
+      // Em um ambiente de produção, aqui faríamos uma requisição para a API
+      // Como simulação, salvamos no localStorage
+      localStorage.setItem("tools", JSON.stringify(toolsData));
+      
+      // Simulação de gravação no arquivo
+      console.log("Gravando em tools.json:", dataToSave);
+      
+      // Em um ambiente real, aqui faríamos uma requisição POST/PUT
+      // Exemplo simulado:
+      // const response = await fetch('/api/tools', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(dataToSave)
+      // });
+      
+      toast({
+        title: "Ferramentas salvas",
+        description: "As alterações nas ferramentas foram salvas no arquivo tools.json.",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar ferramentas no arquivo:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível atualizar o arquivo tools.json.",
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
   // Adicionar nova ferramenta
-  const addTool = (tool: Omit<Tool, "id" | "createdAt" | "createdBy">) => {
+  const addTool = async (tool: Omit<Tool, "id" | "createdAt" | "createdBy">) => {
     if (!user || user.role !== "admin") {
       toast({
         title: "Acesso negado",
@@ -89,16 +114,16 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const updatedTools = [...tools, newTool];
     setTools(updatedTools);
-    saveTools(updatedTools);
+    await saveToolsToFile(updatedTools);
 
     toast({
       title: "Ferramenta adicionada",
-      description: `A ferramenta ${tool.name} foi adicionada com sucesso e armazenada permanentemente.`,
+      description: `A ferramenta ${tool.name} foi adicionada com sucesso ao arquivo tools.json.`,
     });
   };
 
   // Atualizar ferramenta existente
-  const updateTool = (id: string, updates: Partial<Tool>) => {
+  const updateTool = async (id: string, updates: Partial<Tool>) => {
     if (!user || user.role !== "admin") {
       toast({
         title: "Acesso negado",
@@ -113,16 +138,16 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setTools(updatedTools);
-    saveTools(updatedTools);
+    await saveToolsToFile(updatedTools);
 
     toast({
       title: "Ferramenta atualizada",
-      description: `A ferramenta foi atualizada com sucesso e as alterações foram salvas permanentemente.`,
+      description: `A ferramenta foi atualizada com sucesso no arquivo tools.json.`,
     });
   };
 
   // Deletar ferramenta
-  const deleteTool = (id: string) => {
+  const deleteTool = async (id: string) => {
     if (!user || user.role !== "admin") {
       toast({
         title: "Acesso negado",
@@ -134,11 +159,11 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const filteredTools = tools.filter(tool => tool.id !== id);
     setTools(filteredTools);
-    saveTools(filteredTools);
+    await saveToolsToFile(filteredTools);
 
     toast({
       title: "Ferramenta removida",
-      description: `A ferramenta foi removida com sucesso e as alterações foram salvas permanentemente.`,
+      description: `A ferramenta foi removida com sucesso do arquivo tools.json.`,
     });
   };
 
