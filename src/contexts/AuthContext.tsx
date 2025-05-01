@@ -37,6 +37,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Salvar usuários no localStorage como backup
   const saveUsersToLocalStorage = (usersData: User[]) => {
     localStorage.setItem("users", JSON.stringify(usersData));
+    
+    // Simular salvamento no arquivo JSON
+    console.log("Dados de usuários salvos:", { users: usersData });
+    
+    // Em um ambiente real, aqui faríamos uma requisição para salvar no servidor
+    // Por enquanto, apenas informamos que os dados seriam salvos
+    toast({
+      title: "Dados salvos",
+      description: "As alterações foram salvas com sucesso no sistema.",
+    });
+
+    // Nota: Em um ambiente de produção, aqui realizaríamos uma requisição
+    // para uma API que atualizaria o arquivo login.json no servidor
   };
 
   // Carregar usuário do localStorage ao iniciar

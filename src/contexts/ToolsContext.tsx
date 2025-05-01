@@ -59,8 +59,16 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Simulando o salvamento no arquivo JSON (apenas para localStorage neste exemplo)
     const toolsData = { tools: updatedTools };
     
-    // Apenas simulando um "salvamento" no arquivo JSON
+    // Simulando um "salvamento" no arquivo JSON
     console.log("Ferramentas salvas:", toolsData);
+    
+    toast({
+      title: "Ferramentas salvas",
+      description: "As alterações nas ferramentas foram salvas com sucesso.",
+    });
+    
+    // Nota: Em um ambiente de produção, aqui realizaríamos uma requisição
+    // para uma API que atualizaria o arquivo tools.json no servidor
   };
 
   // Adicionar nova ferramenta
