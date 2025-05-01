@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTools } from "@/contexts/ToolsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
-import { Calculator, Wrench as WrenchIcon, Settings as SettingsIcon, ExternalLink } from "lucide-react";
+import { Calculator, Wrench as WrenchIcon, Settings as SettingsIcon } from "lucide-react";
 
 const Dashboard = () => {
   const { getAccessibleTools } = useTools();
@@ -27,18 +27,8 @@ const Dashboard = () => {
         return <WrenchIcon size={36} className="text-orange-400" />;
       case "settings":
         return <SettingsIcon size={36} className="text-orange-400" />;
-      case "external-link":
-        return <ExternalLink size={36} className="text-orange-400" />;
       default:
         return <WrenchIcon size={36} className="text-orange-400" />;
-    }
-  };
-
-  const handleToolClick = (tool) => {
-    if (tool.externalLink) {
-      window.open(tool.url, "_blank", "noopener,noreferrer");
-    } else {
-      navigate(tool.url);
     }
   };
 
@@ -69,15 +59,12 @@ const Dashboard = () => {
               <div 
                 key={tool.id} 
                 className="tool-card cursor-pointer"
-                onClick={() => handleToolClick(tool)}
+                onClick={() => navigate(tool.url)}
               >
                 <div className="mb-4">
                   {getIconComponent(tool.icon)}
                 </div>
-                <h3 className="text-lg font-medium mb-1 flex items-center">
-                  {tool.name}
-                  {tool.externalLink && <ExternalLink size={14} className="ml-2 text-orange-400" />}
-                </h3>
+                <h3 className="text-lg font-medium mb-1">{tool.name}</h3>
                 <p className="text-sm text-white/60">{tool.description}</p>
               </div>
             ))}
@@ -102,15 +89,12 @@ const Dashboard = () => {
                 <div 
                   key={tool.id} 
                   className="tool-card cursor-pointer bg-gradient-to-br from-black to-orange-950/20"
-                  onClick={() => handleToolClick(tool)}
+                  onClick={() => navigate(tool.url)}
                 >
                   <div className="mb-4">
                     {getIconComponent(tool.icon)}
                   </div>
-                  <h3 className="text-lg font-medium mb-1 flex items-center">
-                    {tool.name}
-                    {tool.externalLink && <ExternalLink size={14} className="ml-2 text-orange-400" />}
-                  </h3>
+                  <h3 className="text-lg font-medium mb-1">{tool.name}</h3>
                   <p className="text-sm text-white/60">{tool.description}</p>
                 </div>
               ))}

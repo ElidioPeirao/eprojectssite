@@ -3,7 +3,50 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { Tool } from "../types";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "./AuthContext";
-import { ExternalLink } from "lucide-react";
+
+// Ferramentas iniciais
+const initialTools: Tool[] = [
+  {
+    id: "calc-eng",
+    name: "Calculadora de Engenharia",
+    description: "Calculadora avançada para cálculos de engenharia",
+    url: "/tools/engineering-calculator",
+    icon: "calculator",
+    requiresPro: false,
+    createdAt: new Date(),
+    createdBy: "admin-1"
+  },
+  {
+    id: "calc-ele",
+    name: "Calculadora Elétrica",
+    description: "Calculadora para projetos elétricos",
+    url: "/tools/electrical-calculator",
+    icon: "calculator-2",
+    requiresPro: false,
+    createdAt: new Date(),
+    createdBy: "admin-1"
+  },
+  {
+    id: "pro-tool-1",
+    name: "Análise Estrutural",
+    description: "Ferramenta avançada de análise estrutural",
+    url: "/tools/structural-analysis",
+    icon: "wrench",
+    requiresPro: true,
+    createdAt: new Date(),
+    createdBy: "admin-1"
+  },
+  {
+    id: "pro-tool-2",
+    name: "Simulador Térmico",
+    description: "Simulação de comportamento térmico",
+    url: "/tools/thermal-simulator",
+    icon: "settings",
+    requiresPro: true,
+    createdAt: new Date(),
+    createdBy: "admin-1"
+  }
+];
 
 type ToolsContextType = {
   tools: Tool[];
@@ -19,83 +62,20 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [tools, setTools] = useState<Tool[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar ferramentas do arquivo JSON ao iniciar
+  // Carregar ferramentas do localStorage ao iniciar
   useEffect(() => {
-    const fetchTools = async () => {
-      try {
-        const response = await fetch("/tools.json");
-        if (!response.ok) {
-          throw new Error("Falha ao carregar ferramentas");
-        }
-        
-        const data = await response.json();
-        setTools(data.tools);
-        
-        // Salvar no localStorage como backup
-        localStorage.setItem("tools", JSON.stringify(data.tools));
-      } catch (error) {
-        console.error("Erro ao carregar ferramentas:", error);
-        
-        // Tentar usar o backup do localStorage
-        const storedTools = localStorage.getItem("tools");
-        if (storedTools) {
-          setTools(JSON.parse(storedTools));
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchTools();
+    const storedTools = localStorage.getItem("tools");
+    if (!storedTools) {
+      localStorage.setItem("tools", JSON.stringify(initialTools));
+      setTools(initialTools);
+    } else {
+      setTools(JSON.parse(storedTools));
+    }
   }, []);
 
-  // Função para salvar ferramentas no arquivo tools.json
-  const saveToolsToFile = async (toolsData: Tool[]) => {
-    try {
-      // Preparar dados para salvar (converter Dates para strings)
-      const dataToSave = {
-        tools: toolsData.map(t => ({
-          ...t,
-          createdAt: t.createdAt.toISOString()
-        }))
-      };
-
-      // Em um ambiente de produção, aqui faríamos uma requisição para a API
-      // Como simulação, salvamos no localStorage
-      localStorage.setItem("tools", JSON.stringify(toolsData));
-      
-      // Simulação de gravação no arquivo
-      console.log("Gravando em tools.json:", dataToSave);
-      
-      // Em um ambiente real, aqui faríamos uma requisição POST/PUT
-      // Exemplo simulado:
-      // const response = await fetch('/api/tools', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(dataToSave)
-      // });
-      
-      toast({
-        title: "Ferramentas salvas",
-        description: "As alterações nas ferramentas foram salvas no arquivo tools.json.",
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("Erro ao salvar ferramentas no arquivo:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível atualizar o arquivo tools.json.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
   // Adicionar nova ferramenta
-  const addTool = async (tool: Omit<Tool, "id" | "createdAt" | "createdBy">) => {
+  const addTool = (tool: Omit<Tool, "id" | "createdAt" | "createdBy">) => {
     if (!user || user.role !== "admin") {
       toast({
         title: "Acesso negado",
@@ -114,16 +94,16 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const updatedTools = [...tools, newTool];
     setTools(updatedTools);
-    await saveToolsToFile(updatedTools);
+    localStorage.setItem("tools", JSON.stringify(updatedTools));
 
     toast({
       title: "Ferramenta adicionada",
-      description: `A ferramenta ${tool.name} foi adicionada com sucesso ao arquivo tools.json.`,
+      description: `A ferramenta ${tool.name} foi adicionada com sucesso.`,
     });
   };
 
   // Atualizar ferramenta existente
-  const updateTool = async (id: string, updates: Partial<Tool>) => {
+  const updateTool = (id: string, updates: Partial<Tool>) => {
     if (!user || user.role !== "admin") {
       toast({
         title: "Acesso negado",
@@ -138,16 +118,16 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setTools(updatedTools);
-    await saveToolsToFile(updatedTools);
+    localStorage.setItem("tools", JSON.stringify(updatedTools));
 
     toast({
       title: "Ferramenta atualizada",
-      description: `A ferramenta foi atualizada com sucesso no arquivo tools.json.`,
+      description: `A ferramenta foi atualizada com sucesso.`,
     });
   };
 
   // Deletar ferramenta
-  const deleteTool = async (id: string) => {
+  const deleteTool = (id: string) => {
     if (!user || user.role !== "admin") {
       toast({
         title: "Acesso negado",
@@ -159,11 +139,11 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const filteredTools = tools.filter(tool => tool.id !== id);
     setTools(filteredTools);
-    await saveToolsToFile(filteredTools);
+    localStorage.setItem("tools", JSON.stringify(filteredTools));
 
     toast({
       title: "Ferramenta removida",
-      description: `A ferramenta foi removida com sucesso do arquivo tools.json.`,
+      description: `A ferramenta foi removida com sucesso.`,
     });
   };
 

@@ -34,48 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Salvar usuários no arquivo login.json
-  const saveUsersToFile = async (usersData: User[]) => {
-    try {
-      // Preparar dados para salvar (converter Dates para strings)
-      const dataToSave = {
-        users: usersData.map(u => ({
-          ...u,
-          createdAt: u.createdAt.toISOString(),
-          proExpiresAt: u.proExpiresAt ? u.proExpiresAt.toISOString() : undefined
-        }))
-      };
-
-      // Em um ambiente de produção, aqui faríamos uma requisição para a API
-      // Como simulação, salvamos os dados atualizados no localStorage
-      localStorage.setItem("users", JSON.stringify(usersData));
-      
-      // Simulação de gravação no arquivo
-      console.log("Gravando em login.json:", dataToSave);
-
-      // Em um ambiente real, aqui faríamos uma requisição POST/PUT
-      // Exemplo simulado:
-      // const response = await fetch('/api/users', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(dataToSave)
-      // });
-      
-      toast({
-        title: "Dados salvos",
-        description: "Os dados de usuário foram atualizados no arquivo login.json.",
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("Erro ao salvar usuários no arquivo:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível atualizar o arquivo login.json.",
-        variant: "destructive",
-      });
-      return false;
-    }
+  // Salvar usuários no localStorage como backup
+  const saveUsersToLocalStorage = (usersData: User[]) => {
+    localStorage.setItem("users", JSON.stringify(usersData));
   };
 
   // Carregar usuário do localStorage ao iniciar
@@ -93,6 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (backupUsers) {
           setUsers(JSON.parse(backupUsers));
         }
+      } else {
+        // Salvar no localStorage como backup
+        saveUsersToLocalStorage(loadedUsers);
       }
 
       if (storedUser) {
@@ -124,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           u.id === user.id ? updatedUser : u
         );
         setUsers(updatedUsers);
-        saveUsersToFile(updatedUsers);
+        saveUsersToLocalStorage(updatedUsers);
         
         toast({
           title: "Acesso Pro expirado",
@@ -139,18 +103,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Recarregar usuários do arquivo login.json para garantir dados atualizados
-      const usersFromFile = await loadUsers();
-      
-      if (usersFromFile.length === 0) {
-        throw new Error("Não foi possível carregar os usuários do arquivo login.json");
-      }
+      // Recarregar usuários para garantir dados atualizados
+      const currentUsers = await loadUsers();
+      const usersToCheck = currentUsers.length > 0 ? currentUsers : users;
       
       // Encontra o usuário
-      const foundUser = usersFromFile.find((u: User) => u.email === email && u.password === password);
+      const foundUser = usersToCheck.find((u: User) => u.email === email && u.password === password);
       
       if (!foundUser) {
-        throw new Error("Credenciais inválidas. Verifique seu email e senha.");
+        throw new Error("Credenciais inválidas");
       }
       
       // Verificamos se é um usuário Pro com acesso expirado
@@ -161,11 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           foundUser.allowedTools = foundUser.allowedTools.filter(tool => !tool.startsWith("pro-"));
           
           // Atualiza na lista de usuários
-          const updatedUsers = usersFromFile.map((u: User) => 
+          const updatedUsers = usersToCheck.map((u: User) => 
             u.id === foundUser.id ? foundUser : u
           );
           setUsers(updatedUsers);
-          await saveUsersToFile(updatedUsers);
+          saveUsersToLocalStorage(updatedUsers);
           
           toast({
             title: "Acesso Pro expirado",
@@ -199,12 +160,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (username: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Recarregar usuários do arquivo login.json para garantir dados atualizados
-      const usersFromFile = await loadUsers();
-      const usersToCheck = usersFromFile.length > 0 ? usersFromFile : users;
+      // Recarregar usuários para garantir dados atualizados
+      await loadUsers();
       
       // Verifica se o email já está em uso
-      const existingUser = usersToCheck.find((u: User) => u.email === email);
+      const existingUser = users.find((u: User) => u.email === email);
       
       if (existingUser) {
         throw new Error("Email já está em uso");
@@ -222,11 +182,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       // Adiciona à lista de usuários
-      const updatedUsers = [...usersToCheck, newUser];
+      const updatedUsers = [...users, newUser];
       setUsers(updatedUsers);
-      
-      // Salvar no arquivo login.json
-      await saveUsersToFile(updatedUsers);
+      saveUsersToLocalStorage(updatedUsers);
       
       // Faz login com o novo usuário
       localStorage.setItem("user", JSON.stringify(newUser));
@@ -234,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: "Conta criada com sucesso",
-        description: `Bem-vindo, ${username}! Sua conta foi registrada permanentemente no arquivo login.json.`,
+        description: `Bem-vindo, ${username}!`,
       });
     } catch (error) {
       toast({
@@ -249,9 +207,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Função para atualizar usuários
-  const updateUsers = async (updatedUsers: User[]) => {
+  const updateUsers = (updatedUsers: User[]) => {
     setUsers(updatedUsers);
-    await saveUsersToFile(updatedUsers);
+    saveUsersToLocalStorage(updatedUsers);
   };
 
   // Função para obter todos os usuários
