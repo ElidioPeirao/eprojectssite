@@ -3,50 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { Tool } from "../types";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "./AuthContext";
-
-// Ferramentas iniciais
-const initialTools: Tool[] = [
-  {
-    id: "calc-eng",
-    name: "Calculadora de Engenharia",
-    description: "Calculadora avançada para cálculos de engenharia",
-    url: "/tools/engineering-calculator",
-    icon: "calculator",
-    requiresPro: false,
-    createdAt: new Date(),
-    createdBy: "admin-1"
-  },
-  {
-    id: "calc-ele",
-    name: "Calculadora Elétrica",
-    description: "Calculadora para projetos elétricos",
-    url: "/tools/electrical-calculator",
-    icon: "calculator-2",
-    requiresPro: false,
-    createdAt: new Date(),
-    createdBy: "admin-1"
-  },
-  {
-    id: "pro-tool-1",
-    name: "Análise Estrutural",
-    description: "Ferramenta avançada de análise estrutural",
-    url: "/tools/structural-analysis",
-    icon: "wrench",
-    requiresPro: true,
-    createdAt: new Date(),
-    createdBy: "admin-1"
-  },
-  {
-    id: "pro-tool-2",
-    name: "Simulador Térmico",
-    description: "Simulação de comportamento térmico",
-    url: "/tools/thermal-simulator",
-    icon: "settings",
-    requiresPro: true,
-    createdAt: new Date(),
-    createdBy: "admin-1"
-  }
-];
+import { ExternalLink } from "lucide-react";
 
 type ToolsContextType = {
   tools: Tool[];
@@ -62,17 +19,49 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [tools, setTools] = useState<Tool[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar ferramentas do localStorage ao iniciar
+  // Carregar ferramentas do arquivo JSON ao iniciar
   useEffect(() => {
-    const storedTools = localStorage.getItem("tools");
-    if (!storedTools) {
-      localStorage.setItem("tools", JSON.stringify(initialTools));
-      setTools(initialTools);
-    } else {
-      setTools(JSON.parse(storedTools));
-    }
+    const fetchTools = async () => {
+      try {
+        const response = await fetch("/tools.json");
+        if (!response.ok) {
+          throw new Error("Falha ao carregar ferramentas");
+        }
+        
+        const data = await response.json();
+        setTools(data.tools);
+        
+        // Salvar no localStorage como backup
+        localStorage.setItem("tools", JSON.stringify(data.tools));
+      } catch (error) {
+        console.error("Erro ao carregar ferramentas:", error);
+        
+        // Tentar usar o backup do localStorage
+        const storedTools = localStorage.getItem("tools");
+        if (storedTools) {
+          setTools(JSON.parse(storedTools));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTools();
   }, []);
+
+  // Função para salvar ferramentas no localStorage
+  const saveTools = (updatedTools: Tool[]) => {
+    localStorage.setItem("tools", JSON.stringify(updatedTools));
+    
+    // Em um ambiente real, aqui faríamos uma requisição para salvar no servidor
+    // Simulando o salvamento no arquivo JSON (apenas para localStorage neste exemplo)
+    const toolsData = { tools: updatedTools };
+    
+    // Apenas simulando um "salvamento" no arquivo JSON
+    console.log("Ferramentas salvas:", toolsData);
+  };
 
   // Adicionar nova ferramenta
   const addTool = (tool: Omit<Tool, "id" | "createdAt" | "createdBy">) => {
@@ -94,7 +83,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const updatedTools = [...tools, newTool];
     setTools(updatedTools);
-    localStorage.setItem("tools", JSON.stringify(updatedTools));
+    saveTools(updatedTools);
 
     toast({
       title: "Ferramenta adicionada",
@@ -118,7 +107,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setTools(updatedTools);
-    localStorage.setItem("tools", JSON.stringify(updatedTools));
+    saveTools(updatedTools);
 
     toast({
       title: "Ferramenta atualizada",
@@ -139,7 +128,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const filteredTools = tools.filter(tool => tool.id !== id);
     setTools(filteredTools);
-    localStorage.setItem("tools", JSON.stringify(filteredTools));
+    saveTools(filteredTools);
 
     toast({
       title: "Ferramenta removida",

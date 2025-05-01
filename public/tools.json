@@ -1,0 +1,49 @@
+
+{
+  "tools": [
+    {
+      "id": "calc-eng",
+      "name": "Calculadora de Engenharia",
+      "description": "Calculadora avançada para cálculos de engenharia",
+      "url": "/tools/engineering-calculator",
+      "icon": "calculator",
+      "requiresPro": false,
+      "externalLink": false,
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "createdBy": "admin-1"
+    },
+    {
+      "id": "calc-ele",
+      "name": "Calculadora Elétrica",
+      "description": "Calculadora para projetos elétricos",
+      "url": "/tools/electrical-calculator",
+      "icon": "calculator-2",
+      "requiresPro": false,
+      "externalLink": false,
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "createdBy": "admin-1"
+    },
+    {
+      "id": "pro-tool-1",
+      "name": "Análise Estrutural",
+      "description": "Ferramenta avançada de análise estrutural",
+      "url": "/tools/structural-analysis",
+      "icon": "wrench",
+      "requiresPro": true,
+      "externalLink": false,
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "createdBy": "admin-1"
+    },
+    {
+      "id": "pro-tool-2",
+      "name": "Simulador Térmico",
+      "description": "Simulação de comportamento térmico",
+      "url": "/tools/thermal-simulator",
+      "icon": "settings",
+      "requiresPro": true,
+      "externalLink": false,
+      "createdAt": "2023-05-01T12:00:00.000Z",
+      "createdBy": "admin-1"
+    }
+  ]
+}
