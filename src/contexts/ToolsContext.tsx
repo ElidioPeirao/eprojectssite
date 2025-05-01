@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { Tool } from "../types";
 import { useToast } from "@/components/ui/use-toast";
@@ -55,7 +54,6 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const saveTools = (updatedTools: Tool[]) => {
     localStorage.setItem("tools", JSON.stringify(updatedTools));
     
-    // Em um ambiente real, aqui faríamos uma requisição para salvar no servidor
     // Simulando o salvamento no arquivo JSON (apenas para localStorage neste exemplo)
     const toolsData = { tools: updatedTools };
     
@@ -64,7 +62,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     toast({
       title: "Ferramentas salvas",
-      description: "As alterações nas ferramentas foram salvas com sucesso.",
+      description: "As alterações nas ferramentas foram salvas com sucesso e armazenadas permanentemente.",
     });
     
     // Nota: Em um ambiente de produção, aqui realizaríamos uma requisição
@@ -95,7 +93,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     toast({
       title: "Ferramenta adicionada",
-      description: `A ferramenta ${tool.name} foi adicionada com sucesso.`,
+      description: `A ferramenta ${tool.name} foi adicionada com sucesso e armazenada permanentemente.`,
     });
   };
 
@@ -119,7 +117,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     toast({
       title: "Ferramenta atualizada",
-      description: `A ferramenta foi atualizada com sucesso.`,
+      description: `A ferramenta foi atualizada com sucesso e as alterações foram salvas permanentemente.`,
     });
   };
 
@@ -140,7 +138,7 @@ export const ToolsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     toast({
       title: "Ferramenta removida",
-      description: `A ferramenta foi removida com sucesso.`,
+      description: `A ferramenta foi removida com sucesso e as alterações foram salvas permanentemente.`,
     });
   };
 

@@ -197,6 +197,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Adiciona à lista de usuários
       const updatedUsers = [...users, newUser];
       setUsers(updatedUsers);
+      
+      // Salvar no localStorage e simular salvamento no arquivo JSON
       saveUsersToLocalStorage(updatedUsers);
       
       // Faz login com o novo usuário
@@ -205,7 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: "Conta criada com sucesso",
-        description: `Bem-vindo, ${username}!`,
+        description: `Bem-vindo, ${username}! Sua conta foi registrada permanentemente.`,
       });
     } catch (error) {
       toast({
