@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -29,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash, Edit, User as UserIcon, Calculator, Wrench as WrenchIcon, Settings as SettingsIcon } from "lucide-react";
+import { Plus, Trash, Edit, User as UserIcon, Calculator, Wrench as WrenchIcon, Settings as SettingsIcon, ExternalLink } from "lucide-react";
 
 const AdminPage = () => {
   const { user, updateUsers, getAllUsers } = useAuth();
@@ -51,6 +52,7 @@ const AdminPage = () => {
   const [newToolUrl, setNewToolUrl] = useState("");
   const [newToolIcon, setNewToolIcon] = useState("calculator");
   const [newToolRequiresPro, setNewToolRequiresPro] = useState(false);
+  const [newToolExternalLink, setNewToolExternalLink] = useState(false);
   
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isAddToolDialogOpen, setIsAddToolDialogOpen] = useState(false);
@@ -213,7 +215,8 @@ const AdminPage = () => {
       description: newToolDescription,
       url: newToolUrl,
       icon: newToolIcon,
-      requiresPro: newToolRequiresPro
+      requiresPro: newToolRequiresPro,
+      externalLink: newToolExternalLink
     });
 
     // Limpar formulário
@@ -222,6 +225,7 @@ const AdminPage = () => {
     setNewToolUrl("");
     setNewToolIcon("calculator");
     setNewToolRequiresPro(false);
+    setNewToolExternalLink(false);
     setIsAddToolDialogOpen(false);
   };
 
@@ -470,7 +474,7 @@ const AdminPage = () => {
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsEditUserDialogOpen(false)}>
                         Cancelar
-                      Button>
+                      </Button>
                       <Button className="bg-orange-500 hover:bg-orange-600" onClick={handleEditUser}>
                         Salvar Alterações
                       </Button>
@@ -607,14 +611,17 @@ const AdminPage = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="tool-url">URL (caminho na aplicação)</Label>
+                        <Label htmlFor="tool-url">URL</Label>
                         <Input
                           id="tool-url"
                           value={newToolUrl}
                           onChange={(e) => setNewToolUrl(e.target.value)}
-                          placeholder="/tools/nome-da-ferramenta"
+                          placeholder={newToolExternalLink ? "https://site-externo.com" : "/tools/nome-da-ferramenta"}
                           className="bg-black/50"
                         />
+                        <div className="text-xs text-orange-400 mt-1">
+                          {newToolExternalLink ? "URL externo (inclua https://)" : "Caminho interno na aplicação"}
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
@@ -628,6 +635,7 @@ const AdminPage = () => {
                             <SelectItem value="calculator-2">Calculadora 2</SelectItem>
                             <SelectItem value="wrench">Chave</SelectItem>
                             <SelectItem value="settings">Configurações</SelectItem>
+                            <SelectItem value="external-link">Link Externo</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -639,6 +647,15 @@ const AdminPage = () => {
                           onCheckedChange={(checked) => setNewToolRequiresPro(!!checked)}
                         />
                         <Label htmlFor="tool-pro">Requer acesso Pro</Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="tool-external" 
+                          checked={newToolExternalLink}
+                          onCheckedChange={(checked) => setNewToolExternalLink(!!checked)}
+                        />
+                        <Label htmlFor="tool-external">Link externo</Label>
                       </div>
                     </div>
                     
@@ -665,7 +682,7 @@ const AdminPage = () => {
                         <TableHead>Nome</TableHead>
                         <TableHead>Descrição</TableHead>
                         <TableHead>URL</TableHead>
-                        <TableHead>Requer Pro</TableHead>
+                        <TableHead>Tipo</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -678,22 +695,40 @@ const AdminPage = () => {
                               {tool.icon === "calculator-2" && <Calculator size={16} />}
                               {tool.icon === "wrench" && <WrenchIcon size={16} />}
                               {tool.icon === "settings" && <SettingsIcon size={16} />}
+                              {tool.icon === "external-link" && <ExternalLink size={16} />}
                               <span>{tool.name}</span>
                             </div>
                           </TableCell>
                           
                           <TableCell>{tool.description}</TableCell>
-                          <TableCell className="font-mono text-xs">{tool.url}</TableCell>
-                          <TableCell>
-                            {tool.requiresPro ? (
-                              <span className="bg-orange-300/20 text-orange-300 px-2 py-0.5 rounded-full text-xs">
-                                Pro
-                              </span>
+                          <TableCell className="font-mono text-xs">
+                            {tool.externalLink ? (
+                              <a href={tool.url} target="_blank" rel="noopener noreferrer" className="flex items-center text-orange-400 hover:underline">
+                                {tool.url.length > 30 ? tool.url.substring(0, 30) + '...' : tool.url}
+                                <ExternalLink size={12} className="ml-1" />
+                              </a>
                             ) : (
-                              <span className="bg-gray-500/20 text-gray-400 px-2 py-0.5 rounded-full text-xs">
-                                Não
-                              </span>
+                              tool.url
                             )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              {tool.requiresPro && (
+                                <span className="bg-orange-300/20 text-orange-300 px-2 py-0.5 rounded-full text-xs">
+                                  Pro
+                                </span>
+                              )}
+                              {tool.externalLink && (
+                                <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full text-xs">
+                                  Externo
+                                </span>
+                              )}
+                              {!tool.requiresPro && !tool.externalLink && (
+                                <span className="bg-gray-500/20 text-gray-400 px-2 py-0.5 rounded-full text-xs">
+                                  Padrão
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <Button 

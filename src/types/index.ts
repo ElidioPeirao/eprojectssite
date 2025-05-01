@@ -17,6 +17,7 @@ export interface Tool {
   url: string;
   icon: string; // Nome do ícone 
   requiresPro: boolean;
+  externalLink: boolean; // Indica se o URL é um link externo
   createdAt: Date;
   createdBy: string; // ID do admin que criou
 }
